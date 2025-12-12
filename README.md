@@ -7,6 +7,8 @@ Real-time 3D object detection using DBSCAN clustering for warehouse/industrial e
 ![JetPack](https://img.shields.io/badge/JetPack-6.x-orange)
 ![License](https://img.shields.io/badge/License-MIT-yellow)
 
+![3D Object Detection Demo](demo/PointCloudDetectionDemo.gif)
+
 ## Features
 
 - **DBSCAN Clustering**: Efficient point cloud segmentation without pre-trained models
