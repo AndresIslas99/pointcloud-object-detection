@@ -1,0 +1,125 @@
+# =============================================================================
+# Docker Compose for 3D Object Detection on Jetson AGX Orin (JetPack 6.x)
+# Author: Andrés Islas Bravo
+# 
+# Usage: 
+#   docker-compose build detection
+#   docker-compose run --rm detection           # Detection only
+#   docker-compose run --rm detection-rviz      # Detection + RViz
+#
+# For robot control, use standard ROS2 teleop:
+#   ros2 run teleop_twist_keyboard teleop_twist_keyboard
+# =============================================================================
+
+version: '3.8'
+
+services:
+  # ==========================================================================
+  # Main Detection Service (without RViz)
+  # ==========================================================================
+  detection:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.jp6
+    image: pointcloud-detection-3d:jp6
+    container_name: pointcloud_detection
+    runtime: nvidia
+    privileged: true
+    network_mode: host
+    ipc: host
+    
+    environment:
+      - DISPLAY=${DISPLAY:-:0}
+      - NVIDIA_VISIBLE_DEVICES=all
+      - NVIDIA_DRIVER_CAPABILITIES=all
+      - ROS_DOMAIN_ID=${ROS_DOMAIN_ID:-0}
+      - RMW_IMPLEMENTATION=rmw_cyclonedds_cpp
+    
+    volumes:
+      - /tmp/.X11-unix:/tmp/.X11-unix:rw
+      - ${HOME}/.Xauthority:/root/.Xauthority:rw
+    
+    devices:
+      - /dev/dri:/dev/dri
+    
+    command: >
+      ros2 launch pointcloud_detection_3d detection.launch.py
+        use_sim_time:=true
+        input_topic:=/front_3d_lidar/lidar_points
+        launch_rviz:=false
+    
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+
+  # ==========================================================================
+  # Detection + RViz (for local visualization)
+  # ==========================================================================
+  detection-rviz:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.jp6
+    image: pointcloud-detection-3d:jp6
+    container_name: pointcloud_detection_rviz
+    runtime: nvidia
+    privileged: true
+    network_mode: host
+    ipc: host
+    
+    environment:
+      - DISPLAY=${DISPLAY:-:0}
+      - NVIDIA_VISIBLE_DEVICES=all
+      - NVIDIA_DRIVER_CAPABILITIES=all
+      - ROS_DOMAIN_ID=${ROS_DOMAIN_ID:-0}
+      - RMW_IMPLEMENTATION=rmw_cyclonedds_cpp
+      - QT_X11_NO_MITSHM=1
+    
+    volumes:
+      - /tmp/.X11-unix:/tmp/.X11-unix:rw
+      - ${HOME}/.Xauthority:/root/.Xauthority:rw
+    
+    devices:
+      - /dev/dri:/dev/dri
+    
+    command: >
+      ros2 launch pointcloud_detection_3d detection.launch.py
+        use_sim_time:=true
+        input_topic:=/front_3d_lidar/lidar_points
+        launch_rviz:=true
+
+  # ==========================================================================
+  # RViz Only (connect to existing detection node)
+  # ==========================================================================
+  rviz:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.jp6
+    image: pointcloud-detection-3d:jp6
+    container_name: pointcloud_rviz
+    runtime: nvidia
+    network_mode: host
+    
+    environment:
+      - DISPLAY=${DISPLAY:-:0}
+      - ROS_DOMAIN_ID=${ROS_DOMAIN_ID:-0}
+      - RMW_IMPLEMENTATION=rmw_cyclonedds_cpp
+      - QT_X11_NO_MITSHM=1
+    
+    volumes:
+      - /tmp/.X11-unix:/tmp/.X11-unix:rw
+      - ${HOME}/.Xauthority:/root/.Xauthority:rw
+    
+    devices:
+      - /dev/dri:/dev/dri
+    
+    command: >
+      ros2 run rviz2 rviz2 
+        -d /ros2_ws/install/pointcloud_detection_3d/share/pointcloud_detection_3d/rviz/detection.rviz
+        --ros-args -p use_sim_time:=true
+    
+    profiles:
+      - rviz

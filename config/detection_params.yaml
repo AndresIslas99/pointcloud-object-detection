@@ -1,0 +1,54 @@
+# =============================================================================
+# OPTIMIZED Detection Config - Jetson AGX Orin
+# Author: Andrés Islas Bravo
+# Strategy: Fast detection with point cloud accumulation for rotating LiDAR
+# =============================================================================
+
+pointcloud_detection:
+  ros__parameters:
+    # Topics
+    input_topic: "/front_3d_lidar/lidar_points"
+    output_topic: "/detections"
+    marker_topic: "/detection_markers"
+    
+    # Detection Zone
+    min_range: 0.8
+    max_range: 35.0
+    min_height: -0.5
+    max_height: 3.5
+    
+    # Ground Removal
+    ground_threshold: 0.10
+    
+    # Clustering
+    cluster_eps: 0.5
+    cluster_min_points: 8
+    
+    # Classification
+    score_threshold: 0.30
+    
+    # Tracking
+    min_hits_to_confirm: 1
+    max_age_seconds: 1.5       # Longer to prevent flickering
+    
+    # LiDAR Settings (match your sensor)
+    scan_rate: 10.0            # Hz - LiDAR rotation rate
+    
+    # Visualization Stability
+    marker_lifetime: 0.5       # Seconds - longer = more stable markers
+    
+    # Performance
+    publish_rate_limit: 10.0
+    
+    frame_id: ""
+
+# =============================================================================
+# YOUR LIDAR SPECS
+# =============================================================================
+# Scan Rate: 10 Hz
+# FOV: 360° x 31°
+# Resolution: 0.18° x 1°
+# Point Rate: 640,000 pts/sec (single return)
+# Points per rotation: ~64,000
+# Scan direction: CW
+# =============================================================================

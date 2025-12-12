@@ -1,0 +1,35 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <name>pointcloud_detection_3d</name>
+  <version>1.0.0</version>
+  <description>Real-time 3D Object Detection for LiDAR Point Clouds using CUDA-PointPillars</description>
+  <maintainer email="andresislas99@icloud.com">Andres Islas Bravo</maintainer>
+  <license>MIT</license>
+  <author email="andresislas99@icloud.com">Andres Islas Bravo</author>
+  
+  <url type="website">https://github.com/AndresIslas99/pointcloud-object-detection</url>
+  <url type="repository">https://github.com/AndresIslas99/pointcloud-object-detection</url>
+
+  <buildtool_depend>ament_cmake</buildtool_depend>
+  <buildtool_depend>ament_cmake_python</buildtool_depend>
+
+  <depend>rclpy</depend>
+  <depend>rclcpp</depend>
+  <depend>std_msgs</depend>
+  <depend>sensor_msgs</depend>
+  <depend>geometry_msgs</depend>
+  <depend>visualization_msgs</depend>
+  <depend>vision_msgs</depend>
+  <depend>tf2_ros</depend>
+  <depend>tf2_geometry_msgs</depend>
+
+  <exec_depend>python3-numpy</exec_depend>
+
+  <test_depend>ament_lint_auto</test_depend>
+  <test_depend>ament_lint_common</test_depend>
+
+  <export>
+    <build_type>ament_cmake</build_type>
+  </export>
+</package>

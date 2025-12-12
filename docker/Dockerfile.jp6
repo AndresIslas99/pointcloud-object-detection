@@ -1,0 +1,81 @@
+# =============================================================================
+# Dockerfile for JetPack 6.x (L4T R36.x) - Jetson AGX Orin
+# Author: Andrés Islas Bravo
+# For: JetPack 6.0/6.1 (L4T R36.3.0 - R36.4.x)
+# =============================================================================
+
+# Use dustynv's PyTorch container which is actively maintained for latest JetPack
+# Available tags: https://hub.docker.com/r/dustynv/pytorch/tags
+FROM dustynv/pytorch:2.1-r36.2.0
+
+# Alternative: Official NVIDIA L4T JetPack base (larger, ~14GB)
+# FROM nvcr.io/nvidia/l4t-jetpack:r36.3.0
+
+ENV DEBIAN_FRONTEND=noninteractive
+ENV LANG=C.UTF-8
+ENV LC_ALL=C.UTF-8
+
+# =============================================================================
+# Install ROS2 Humble
+# =============================================================================
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    curl \
+    gnupg2 \
+    lsb-release \
+    software-properties-common \
+    && rm -rf /var/lib/apt/lists/*
+
+# Add ROS2 repository
+RUN curl -sSL https://raw.githubusercontent.com/ros/rosdistro/master/ros.key -o /usr/share/keyrings/ros-archive-keyring.gpg \
+    && echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/ros-archive-keyring.gpg] http://packages.ros.org/ros2/ubuntu $(lsb_release -cs) main" > /etc/apt/sources.list.d/ros2.list
+
+# Install ROS2 Humble packages
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    ros-humble-ros-base \
+    ros-humble-sensor-msgs \
+    ros-humble-geometry-msgs \
+    ros-humble-visualization-msgs \
+    ros-humble-vision-msgs \
+    ros-humble-tf2-ros \
+    ros-humble-tf2-geometry-msgs \
+    ros-humble-rmw-cyclonedds-cpp \
+    ros-humble-rviz2 \
+    ros-humble-rviz-default-plugins \
+    python3-colcon-common-extensions \
+    && rm -rf /var/lib/apt/lists/*
+
+ENV ROS_DISTRO=humble
+ENV RMW_IMPLEMENTATION=rmw_cyclonedds_cpp
+
+# =============================================================================
+# Install Python dependencies for detection
+# =============================================================================
+RUN pip3 install --no-cache-dir --ignore-installed \
+    scipy \
+    pyyaml \
+    transforms3d \
+    scikit-learn
+
+# =============================================================================
+# Setup ROS2 workspace
+# =============================================================================
+WORKDIR /ros2_ws/src
+COPY . /ros2_ws/src/pointcloud_detection_3d/
+
+WORKDIR /ros2_ws
+RUN . /opt/ros/humble/setup.sh && colcon build --symlink-install
+
+# =============================================================================
+# Entrypoint
+# =============================================================================
+RUN echo '#!/bin/bash\n\
+source /opt/ros/humble/setup.bash\n\
+source /ros2_ws/install/setup.bash\n\
+export RMW_IMPLEMENTATION=rmw_cyclonedds_cpp\n\
+exec "$@"' > /ros_entrypoint.sh && chmod +x /ros_entrypoint.sh
+
+ENTRYPOINT ["/ros_entrypoint.sh"]
+CMD ["bash"]
+
+LABEL maintainer="Andrés Islas Bravo <andresislas99@icloud.com>"
+LABEL description="3D Object Detection on Jetson AGX Orin - JetPack 6.x"
